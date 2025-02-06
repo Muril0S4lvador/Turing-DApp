@@ -1,0 +1,244 @@
+/* -------------------- Global Style -------------------- */
+:root{
+    --golden: #FFD700;
+    --gray: #D9D9D9;
+    --white: #FFFFFF;
+
+    --red-100: #AF3E3E;
+    --red-500: #852020;
+    --red-900: #5A1010;
+    
+    --light-blue-100: #20B2AA;
+    --light-blue-200: #30C3B5;
+    --light-blue-300: #0F4C49;
+    
+    --green-100: #34C759;
+    --green-300: #1F7A36;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, input, button {
+    font-family: 'Roboto', sans-serif; 
+    font-weight: 400;
+    font-size: 1rem;
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--red-500);
+    display: flex;
+}
+
+/* --------------------- Ranking CSS -------------------- */
+
+.ranking-container {
+    background-color: var(--red-100);
+    padding: 1.25rem;
+    margin: 2.5rem;
+    border-radius: 15px;
+    width:30%;
+    text-align: center;
+}
+.ranking-container h2 {
+    color: var(--golden);
+    font-size: 3.5rem;
+    font-weight: bold;
+    padding-bottom: 1rem;
+}
+.ranking-item {
+    background-color: var(--gray);
+    color: var(--red-900);
+    padding: 1rem;
+    margin: 0.5rem 1rem;
+    min-height: 3.8rem;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    flex-wrap: wrap;
+}
+
+.ranking-item span {
+    display: block; /* Faz cada span ocupar a largura definida */
+    max-width: 50%; /* Garante que os spans dividam o espaço sem ultrapassar */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    text-align: left;
+}
+
+/* ---------------------- Vote CSS ---------------------- */
+
+.vote-container {
+    padding: 1.25rem;
+    margin: 2.5rem;
+    width: 60%;
+    text-align: center;
+}
+
+.vote-container h1 {
+    color: var(--golden);
+    font-size: 9rem;
+    margin-left: 10rem;
+}
+
+.vote-act-button-container{
+    display: flex;
+}
+
+.vote-act-button-container label {
+    margin-left: 8rem;
+    margin-top: 5rem;
+}
+
+.input-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 12rem;
+}
+
+.input-container input {
+    background-color: var(--gray);
+    color: var(--red-100);
+    padding: 1rem;
+    height: 3.8rem;
+    width: 80%;
+    border-radius: 20px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    margin: 0.5rem 1rem 0.7rem 1rem;
+}
+
+.text-container{
+    width: 60%;
+    margin-right: -5rem;
+}
+
+.input-container input::placeholder {
+    color: var(--red-100);
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    appearance: textfield;
+}
+input {
+    outline: none;
+    box-shadow: none;
+    border: none;
+}
+
+.button-container{
+    width: 20%;
+}
+
+.button-container button {
+    background-color: var(--light-blue-100);
+    color: var(--white);
+    font-size: 1.3rem;
+    margin: 0.5rem 0 0.7rem 0;
+    border: none;
+    border-radius: 3.125rem;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+    height: 3.8rem;
+    min-width: 12rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: background-color 0.1s ease-in-out, transform 0.01s ease-in-out;
+}
+
+.button-on:hover {
+    background-color: var(--light-blue-200);
+}
+.button-on:active {
+    transform: scale(0.97);
+}
+
+.button-container button.button-off{
+    background-color: var(--light-blue-300);
+    color: var(--white);
+    cursor: default;
+}
+
+
+/* --------------------- Switch CSS --------------------- */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+    
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+  
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--green-300);
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+  
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--white);
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+  
+input:checked + .slider {
+    background-color: var(--green-100);
+}
+  
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--green-100);
+}
+  
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+  
+  /* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+  
+.slider.round:before {
+    border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 87.5%;
+    }
+    .wrapper {
+        grid-template-columns: 1fr;
+    }
+}

@@ -10,6 +10,8 @@ contract Turing is ERC20{
 
     bool private voting = false;
 
+    string[] public codenames;
+
     /**
      * @dev Struct de candidatos com address e opção de voto, caso tenha votado
      */
@@ -22,6 +24,10 @@ contract Turing is ERC20{
      * @dev Mapeia os codinomes para os candidatos
      */
     mapping(string => Candidate) authorizedUsers;
+
+    event VotingStatus(bool status);
+    event Vote(string from, string to, uint256 value);
+    event MessageCodenames(bytes[] codenames);
 
     constructor() ERC20("Turing", "TTK"){
         deployer = msg.sender;
@@ -73,18 +79,63 @@ contract Turing is ERC20{
         for(uint i = 0; i < candidateCodename.length; i++){
             Candidate storage c = authorizedUsers[candidateCodename[i]];
             c.candidateAddress = candidateAddresses[i];
+            codenames.push(candidateCodename[i]);
         }
         
+    }
+
+    function getCodenames() public view returns(string memory) {
+        string memory result = codenames[0]; // Começa com a primeira string
+
+        for (uint256 i = 1; i < codenames.length; i++) {
+            result = string(abi.encodePacked(result, ";", codenames[i]));
+        }
+
+        return result;
+    }
+
+    function getRanking() public view returns(string memory) {
+        string memory result = "";
+
+        for (uint256 i = 0; i < codenames.length; i++) {
+            Candidate storage c = authorizedUsers[codenames[i]];
+            // Cria "Murilo-10;Joao-14;...."
+            result = string(abi.encodePacked(result, codenames[i], "-", uint2str(balanceOf(c.candidateAddress)), ";"));
+        }
+
+        return result;
+    }
+
+    function uint2str(uint256 _i) internal pure returns (string memory) {
+        if (_i == 0) return "0";
+        uint256 j = _i;
+        uint256 length;
+        while (j != 0) {
+            length++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(length);
+        while (_i != 0) {
+            bstr[--length] = bytes1(uint8(48 + _i % 10));
+            _i /= 10;
+        }
+        return string(bstr);
     }
 
     function votingOn() public {
         require(msg.sender == deployer || msg.sender == teacherAddress, "Unauthenticated!");
         voting = true;
+        emit VotingStatus(voting);
     }
 
     function votingOff() public {
         require(msg.sender == deployer || msg.sender == teacherAddress, "Unauthenticated!");
         voting = false;
+        emit VotingStatus(voting);
+    }
+
+    function getVotingStatus() public view returns (bool) {
+        return voting;
     }
 
     function issueToken(string calldata receiver, uint256 amount) public{
@@ -95,7 +146,7 @@ contract Turing is ERC20{
         _mint(c.candidateAddress, amount);
     }
 
-    function vote(string calldata receiver, uint8 amount) public {
+    function vote(string calldata receiver, uint256 amount) public {
         require(voting == false, "You can't vote now");
         require(amount >= 2, "You must send a lower amount");
         
@@ -115,4 +166,7 @@ contract Turing is ERC20{
         // Marca que receiver foi votado pelo sender
         c.votedBy[msg.sender] = true;
     }
+
+
+
 }

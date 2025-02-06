@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vote</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js""></script>
+  
+</head>
+<body>
+
+    <div class="ranking-container" id="rankingList">
+        <h2>Ranking</h2>
+    </div>
+
+    <div class="vote-container">
+        <div class="vote-act-button-container">
+            <h1>VOTE</h1>
+            <!-- Botão slide -->
+            <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider round"></span>
+            </label>
+            <!-- Botão slide -->
+        </div>
+
+        <div class="input-container">
+            <div class="text-container">
+
+                <input type="text" id="codename" placeholder="Codename">
+                <input type="number" id="amount" placeholder="Amount">
+            </div>
+            <div class="button-container">
+                <button id="button-vote" class="button-off">Vote</button>
+                <button id="button-issue-token" class="button-on">Issue Token</button>
+            </div>
+        </div>
+         
+    </div>
+
+
+  <!-- <script src="script.js" defer></script> -->
+  <script src="script.js?v=<?php echo time(); ?>"></script>
+</body>
+</html>

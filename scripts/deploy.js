@@ -11,7 +11,7 @@ async function main() {
   
     console.log("Account balance:", (await deployer.getBalance()).toString());
   
-    const Token = await hre.ethers.getContractFactory("MuriloToken");
+    const Token = await hre.ethers.getContractFactory("Turing");
     const token = await Token.deploy();
     await token.deployed();
   

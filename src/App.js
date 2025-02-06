@@ -1,15 +1,29 @@
 import './App.css';
 import {ethers} from 'ethers'
 import { useState } from 'react';
-import TokenArtifact from "./artifacts/contracts/MuriloToken.sol/MuriloToken.json"
-const tokenAddress = "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9"
+import TokenArtifact from "./artifacts/contracts/Turing.sol/Turing.json"
+const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
 
 const localBlockchainAddress = 'http://localhost:8545'
 
+/*
+
+  Constructor, se possivel, retornar nomes
+
+  Listar nomes em Turing 0
+  Sempre salvar o ranking no browser, para caso att não perder o ranking
+
+  evento em voting, issueTokens e Vote
+
+  Voting => Liberar ou não a votação
+
+  IssueTokens e Vote => Atualizar Ranking de Turings
+*/
 function App() {
   const [tokenData, setTokenData] = useState({})
   const [amount, setAmount] = useState()
   const [balanceH1, setBalance] = useState()
+  let [voting, setVoting] = useState()
 
   const provider = new ethers.providers.JsonRpcProvider(localBlockchainAddress)
   const signer = provider.getSigner();
@@ -25,7 +39,7 @@ function App() {
   }
 
   async function _getTokenData() {
-      const contract = await _intializeContract(signer)
+        const contract = await _intializeContract(signer)
 
       const name = await contract.name();
       const symbol = await contract.symbol();
@@ -48,7 +62,6 @@ function App() {
       await contract.functions.issueToken(amount)
       console.log('Issue token successfull')
   }
-
   return (
     <div className="App">
       <header className="App-header">
