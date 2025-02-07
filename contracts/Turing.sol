@@ -25,9 +25,8 @@ contract Turing is ERC20{
      */
     mapping(string => Candidate) authorizedUsers;
 
-    event VotingStatus(bool status);
     event Vote(string from, string to, uint256 value);
-    event MessageCodenames(bytes[] codenames);
+    event IssueToken(string to, uint256 amount);
 
     constructor() ERC20("Turing", "TTK"){
         deployer = msg.sender;
@@ -125,13 +124,11 @@ contract Turing is ERC20{
     function votingOn() public {
         require(msg.sender == deployer || msg.sender == teacherAddress, "Unauthenticated!");
         voting = true;
-        emit VotingStatus(voting);
     }
 
     function votingOff() public {
         require(msg.sender == deployer || msg.sender == teacherAddress, "Unauthenticated!");
         voting = false;
-        emit VotingStatus(voting);
     }
 
     function getVotingStatus() public view returns (bool) {
@@ -144,6 +141,8 @@ contract Turing is ERC20{
         Candidate storage c = authorizedUsers[receiver];
 
         _mint(c.candidateAddress, amount);
+
+        emit IssueToken(receiver, amount);
     }
 
     function vote(string calldata receiver, uint256 amount) public {
@@ -157,8 +156,7 @@ contract Turing is ERC20{
         require(balanceOf(msg.sender) >= amount, "You don't have enough balance");
 
         // Faz a transferência
-        _mint(c.candidateAddress, amount);
-        _burn(msg.sender, amount);
+        _transfer(msg.sender, c.candidateAddress, amount);
 
         // Recompensa de quem votou 0,2 Turings
         _mint(msg.sender, 200000000000000000);
