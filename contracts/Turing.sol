@@ -146,13 +146,15 @@ contract Turing is ERC20{
     }
 
     function vote(string calldata receiver, uint256 amount) public {
-        require(voting == false, "You can't vote now");
-        require(amount >= 2, "You must send a lower amount");
+        require(msg.sender != deployer && msg.sender != teacherAddress, "Unauthorized");
+        require(voting == true, "You can't vote now");
+        require(amount <= 2, "You must send a lower amount");
         
         Candidate storage c = authorizedUsers[receiver];
 
-        require(msg.sender == c.candidateAddress, "You can't vote for yourself");
-        require(c.votedBy[msg.sender] == true, "You can't vote for the same candidate twice");
+        require(c.candidateAddress != address(0), "Unknown candidate");
+        require(msg.sender != c.candidateAddress, "You can't vote for yourself");
+        require(c.votedBy[msg.sender] == false, "You can't vote for the same candidate twice");
         require(balanceOf(msg.sender) >= amount, "You don't have enough balance");
 
         // Faz a transferência
