@@ -189,11 +189,11 @@ contractEvent.on('IssueToken', async (to, amount) => {
 });
 
 /**
- * ISSUE TOKEN
+ * ISSUE TOKEN (FUNC)
  * 
- * RANKING E EVENTOS
+ * RANKING E EVENTOS XX
  * 
- * VOTING
+ * VOTING XX
  * 
- * REQUIREMENTS
+ * REQUIREMENTS 
  */
