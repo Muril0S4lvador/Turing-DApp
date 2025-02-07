@@ -8,9 +8,13 @@ const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 const provider = new ethers.providers.JsonRpcProvider(localBlockchainAddress)
 const contractEvent = _intializeContract(provider);
-const signer = provider.getSigner();
+let signer = provider.getSigner();
 
 let rankingData = []
+
+// window.ethereum.on("accountsChanged", async () => {
+//   signer = provider.getSigner();
+// });
 
 async function _intializeContract(init) {
   const response = await fetch(ARTIFACT_PATH);
@@ -24,7 +28,7 @@ async function _intializeContract(init) {
   return contract
 }
 
-async function loadRanking() {
+async function loadPage() {
   if (typeof window.ethereum !== "undefined") {
       try {
           const contract = await _intializeContract(signer);
@@ -88,12 +92,12 @@ function parseRankingData(rankingString) {
 // Função para formatar o saldo (exemplo: converter "1000000000000000000" para "1 T")
 function formatBalance(balance) {
   const balanceNum = BigInt(balance);
-  if (balanceNum >= 10n ** 18n) return (balanceNum / 10n ** 18n).toString() + " T";
+  // if (balanceNum >= 10n ** 18n) return (balanceNum / 10n ** 18n).toString() + " T";
   return balanceNum.toString() + " T"; // Se for menor que 1 T, retorna normal
 }
 
 // Carrega o ranking automaticamente ao carregar a página
-window.addEventListener("load", loadRanking);
+window.addEventListener("load", loadPage);
 
 // Seleciona o switch e o botão
 const switchInput = document.querySelector(".switch input");
@@ -153,11 +157,8 @@ issueTokenButton.addEventListener("click", async () => {
     }
 });
 
-// Seleciona botão Vote
-const VoteButton = document.getElementById("button-vote");
-
 // Adiciona Listener para botão Vote
-VoteButton.addEventListener("click", async () => {
+voteButton.addEventListener("click", async () => {
     if(!switchInput.checked){
       console.log("Unable to vote");
       return;
@@ -177,7 +178,7 @@ VoteButton.addEventListener("click", async () => {
     try {
       await contract.vote(codename, amount);
     } catch (error) {
-        console.log("Vote failed. Error message:", error.message);
+        console.log("Vote failed. Error message:", error.reason);
     }
 });
 
@@ -188,5 +189,11 @@ contractEvent.on('IssueToken', async (to, amount) => {
 });
 
 /**
- * Adicionar eventos 
+ * ISSUE TOKEN
+ * 
+ * RANKING E EVENTOS
+ * 
+ * VOTING
+ * 
+ * REQUIREMENTS
  */
