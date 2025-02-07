@@ -17,16 +17,12 @@ npx hardhat node
 
 deploy contract
 ```shell
-npx hardhat run --network localhost scripts/deploy.js
+npm run contract
 ```
 
-Set up NODE_OPTIONS with legacy provider
+Start HTTP server
 ```shell
-export NODE_OPTIONS=--openssl-legacy-provider
+npm run server
 ```
 
-Start React app
-```shell
-npm start
-```
-
+Navigate to `localhost:8080/frontend/index.html`
