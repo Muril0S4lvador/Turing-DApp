@@ -6,11 +6,11 @@ const localBlockchainAddress = "http://127.0.0.1:8545/";
 
 const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
-const provider = new ethers.providers.JsonRpcProvider(localBlockchainAddress)
+const provider = new ethers.providers.JsonRpcProvider(localBlockchainAddress);
 const contractEvent = _intializeContract(provider);
 let signer = provider.getSigner();
 
-let rankingData = []
+let rankingData = [];
 
 // window.ethereum.on("accountsChanged", async () => {
 //   signer = provider.getSigner();
@@ -20,33 +20,28 @@ async function _intializeContract(init) {
   const response = await fetch(ARTIFACT_PATH);
   const artifact = await response.json(); // Lê o JSON
   const abi = artifact.abi; // Extrai o  ABI
-  const contract = new ethers.Contract(
-      tokenAddress,
-      abi,
-      init
-  );
-  return contract
+  const contract = new ethers.Contract(tokenAddress, abi, init);
+  return contract;
 }
 
 async function loadPage() {
   if (typeof window.ethereum !== "undefined") {
-      try {
-          const contract = await _intializeContract(signer);
+    try {
+      const contract = await _intializeContract(signer);
 
-          await getVotingStatus(contract);
+      await getVotingStatus(contract);
 
-          // Chama a função Solidity
-          const rankingString = await contract.getRanking();
-          rankingData = parseRankingData(rankingString);
+      // Chama a função Solidity
+      const rankingString = await contract.getRanking();
+      rankingData = parseRankingData(rankingString);
 
-
-          console.log("Ranking Recebido:", rankingData);
-          updateRankingData();
-      } catch (error) {
-          console.error("Erro ao carregar ranking:", error);
-      }
+      console.log("Ranking Recebido:", rankingData);
+      updateRankingData();
+    } catch (error) {
+      console.error("Erro ao carregar ranking:", error);
+    }
   } else {
-      alert("MetaMask não encontrado! Instale-o para continuar.");
+    alert("MetaMask não encontrado! Instale-o para continuar.");
   }
 }
 
@@ -54,7 +49,7 @@ function updateRankingData() {
   const rankingList = document.getElementById("rankingList");
   rankingList.innerHTML = ""; // Limpa a lista antes de adicionar novos elementos
 
-  rankingData.forEach(item => {
+  rankingData.forEach((item) => {
     const div = document.createElement("div");
     div.classList.add("ranking-item");
     div.innerHTML = `<span>${item.codename}</span> <span>${item.balance}</span>`;
@@ -64,10 +59,10 @@ function updateRankingData() {
 
 const voteButton = document.getElementById("button-vote");
 
-async function getVotingStatus(contract){
+async function getVotingStatus(contract) {
   const [votingStatus] = await contract.functions.getVotingStatus();
 
-  if(votingStatus) {
+  if (votingStatus) {
     switchInput.checked = true;
     voteButton.classList.remove("button-off");
     voteButton.classList.add("button-on");
@@ -81,12 +76,13 @@ async function getVotingStatus(contract){
 function parseRankingData(rankingString) {
   if (!rankingString || rankingString.trim() === "") return [];
 
-  return rankingString.split(";") // Separa os candidatos
-      .filter(item => item.includes("-")) // Filtra strings vazias
-      .map(entry => {
-          const [codename, balance] = entry.split("-"); // Divide nome e saldo
-          return { codename, balance: formatBalance(balance) }; // Formata o saldo
-      });
+  return rankingString
+    .split(";") // Separa os candidatos
+    .filter((item) => item.includes("-")) // Filtra strings vazias
+    .map((entry) => {
+      const [codename, balance] = entry.split("-"); // Divide nome e saldo
+      return { codename, balance: formatBalance(balance) }; // Formata o saldo
+    });
 }
 
 // Função para formatar o saldo (exemplo: converter "1000000000000000000" para "1 T")
@@ -107,9 +103,8 @@ switchInput.addEventListener("change", updateButtonState);
 
 // Função para atualizar a classe do botão
 async function updateButtonState() {
-
   const contract = await _intializeContract(signer);
-  
+
   if (switchInput.checked) {
     voteButton.classList.remove("button-off");
     voteButton.classList.add("button-on");
@@ -117,7 +112,7 @@ async function updateButtonState() {
       await contract.functions.votingOn();
     } catch (error) {
       alert("Unable to change Voting status");
-      console.log(error);     
+      console.log(error);
     }
   } else {
     voteButton.classList.add("button-off");
@@ -127,7 +122,7 @@ async function updateButtonState() {
       await contract.functions.votingOff();
     } catch (error) {
       alert("Unable to change Voting status");
-      console.log(error);     
+      console.log(error);
     }
   }
 }
@@ -139,61 +134,68 @@ const amountInput = document.getElementById("amount");
 
 // Adiciona Listener para botão Issue Token
 issueTokenButton.addEventListener("click", async () => {
-    const codename = codenameInput.value.trim(); // Remove espaços extras
-    const amount = parseFloat(amountInput.value); // Converte string para número
+  const codename = codenameInput.value.trim(); // Remove espaços extras
+  const amount = parseFloat(amountInput.value); // Converte string para número
 
-    if (!codename || isNaN(amount) || amount <= 0) {
-        alert("Por favor, preencha um codename válido e um amount maior que zero.");
-        return;
-    }
+  if (!codename || isNaN(amount) || amount <= 0) {
+    alert("Por favor, preencha um codename válido e um amount maior que zero.");
+    return;
+  }
 
-    codenameInput.value = amountInput.value = "";
+  codenameInput.value = amountInput.value = "";
 
-    const contract = await _intializeContract(signer);
-    try {
-      await contract.issueToken(codename, amount);
-    } catch (error) {
-        console.log("Issue Token failed. Error message:", error.message);
-    }
+  const contract = await _intializeContract(signer);
+  try {
+    await contract.issueToken(codename, amount);
+  } catch (error) {
+    console.log("Issue Token failed. Error message:", error.message);
+  }
 });
 
 // Adiciona Listener para botão Vote
 voteButton.addEventListener("click", async () => {
-    if(!switchInput.checked){
-      console.log("Unable to vote");
-      return;
-    }
-  
-    const codename = codenameInput.value.trim(); // Remove espaços extras
-    const amount = parseFloat(amountInput.value); // Converte string para número
+  if (!switchInput.checked) {
+    console.log("Unable to vote");
+    return;
+  }
 
-    if (!codename || isNaN(amount) || amount <= 0) {
-        alert("Por favor, preencha um codename válido e um amount maior que zero.");
-        return;
-    }
+  const codename = codenameInput.value.trim(); // Remove espaços extras
+  const amount = parseFloat(amountInput.value); // Converte string para número
 
-    codenameInput.value = amountInput.value = "";
+  if (!codename || isNaN(amount) || amount <= 0) {
+    alert("Por favor, preencha um codename válido e um amount maior que zero.");
+    return;
+  }
 
-    const contract = await _intializeContract(signer);
-    try {
-      await contract.vote(codename, amount);
-    } catch (error) {
-        console.log("Vote failed. Error message:", error.reason);
-    }
+  codenameInput.value = amountInput.value = "";
+
+  const contract = await _intializeContract(signer);
+  try {
+    await contract.vote(codename, amount);
+  } catch (error) {
+    console.log("Vote failed. Error message:", error.reason);
+  }
 });
 
-contractEvent.on('IssueToken', async (to, amount) => {
-  console.log('Transfer event emitted. {to, amount}');
-  rankingData.find(item => item.codename === to).amount += amount;
+contractEvent.on("IssueToken", async (to, amount) => {
+  console.log("Transfer event emitted. {to, amount}");
+  rankingData.find((item) => item.codename === to).amount += amount;
   updateRankingData();
 });
 
 /**
  * ISSUE TOKEN (FUNC)
- * 
+ *
  * RANKING E EVENTOS XX
- * 
+ *
  * VOTING XX
- * 
- * REQUIREMENTS 
+ *
+ * REQUIREMENTS
+ */
+
+/** POR PRIORIDADE
+ * Alterar signer quando troca de conta no metamask
+ * Opção de voto
+ * Formatar numero de amount -18 casas decimais
+ * Atualizar pagina dinamicamente de acordo com eventos do contrato
  */
