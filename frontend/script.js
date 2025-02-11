@@ -12,9 +12,9 @@ let signer = provider.getSigner();
 
 let rankingData = [];
 
-// window.ethereum.on("accountsChanged", async () => {
-//   signer = provider.getSigner();
-// });
+window.ethereum.on("accountsChanged", async () => {
+  await reloadSigner();
+});
 
 async function _intializeContract(init) {
   const response = await fetch(ARTIFACT_PATH);
@@ -23,6 +23,55 @@ async function _intializeContract(init) {
   const contract = new ethers.Contract(tokenAddress, abi, init);
   return contract;
 }
+
+// Function to reload the signer and reinitialize the page
+async function reloadSigner() {
+  try {
+      // Get the current account from MetaMask
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+      if (accounts.length > 0) {
+          // Update the signer with the new account
+          signer = provider.getSigner(accounts[0]);
+          console.log("Signer updated:", await signer.getAddress());
+
+          // Reload or update the page as needed
+          window.location.reload(); // Reload the page to reflect changes
+      } else {
+          console.error("No accounts found in MetaMask");
+      }
+  } catch (error) {
+      console.error("Error reloading signer:", error);
+  }
+}
+
+async function connectToMetaMask() {
+  if (typeof window.ethereum !== 'undefined') {
+      try {
+          // Request account access
+          const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+          console.log("Connected account:", accounts[0]);
+
+          // Update the signer with the new account
+          signer = provider.getSigner(accounts[0]);
+          contractEvent = _intializeContract(provider, signer);
+          console.log("Signer updated:", await signer.getAddress());
+
+          // // Listen for account changes
+          // ethereum.on('accountsChanged', async (newAccounts) => {
+          //     console.log("Account changed to:", newAccounts[0]);
+          //     await reloadSigner();
+
+          // });
+      } catch (error) {
+          console.error("User denied account access or an error occurred:", error);
+      }
+  } else {
+      console.error("MetaMask is not installed!");
+  }
+}
+
+// Call the function to connect to MetaMask
+connectToMetaMask();
 
 async function loadPage() {
   if (typeof window.ethereum !== "undefined") {
@@ -49,10 +98,16 @@ function updateRankingData() {
   const rankingList = document.getElementById("rankingList");
   rankingList.innerHTML = ""; // Limpa a lista antes de adicionar novos elementos
 
+  rankingData.sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance));
+
   rankingData.forEach((item) => {
     const div = document.createElement("div");
     div.classList.add("ranking-item");
-    div.innerHTML = `<span>${item.codename}</span> <span>${item.balance}</span>`;
+
+    const balance = parseFloat(item.balance) / Math.pow(10, 18);
+    const formattedBalance = balance.toFixed(18).replace(".", ",");
+    
+    div.innerHTML = `<span>${item.codename}</span> <span>${formattedBalance} T</span>`;
     rankingList.appendChild(div);
   });
 }
@@ -81,15 +136,8 @@ function parseRankingData(rankingString) {
     .filter((item) => item.includes("-")) // Filtra strings vazias
     .map((entry) => {
       const [codename, balance] = entry.split("-"); // Divide nome e saldo
-      return { codename, balance: formatBalance(balance) }; // Formata o saldo
+      return { codename, balance }; // Formata o saldo
     });
-}
-
-// Função para formatar o saldo (exemplo: converter "1000000000000000000" para "1 T")
-function formatBalance(balance) {
-  const balanceNum = BigInt(balance);
-  // if (balanceNum >= 10n ** 18n) return (balanceNum / 10n ** 18n).toString() + " T";
-  return balanceNum.toString() + " T"; // Se for menor que 1 T, retorna normal
 }
 
 // Carrega o ranking automaticamente ao carregar a página
@@ -106,21 +154,28 @@ async function updateButtonState() {
   const contract = await _intializeContract(signer);
 
   if (switchInput.checked) {
-    voteButton.classList.remove("button-off");
-    voteButton.classList.add("button-on");
     try {
       await contract.functions.votingOn();
+      voteButton.classList.remove("button-off");
+      voteButton.classList.add("button-on");
     } catch (error) {
+      voteButton.classList.add("button-off");
+      voteButton.classList.remove("button-on");
+      switchInput.checked = false;
+      
       alert("Unable to change Voting status");
       console.log(error);
     }
   } else {
-    voteButton.classList.add("button-off");
-    voteButton.classList.remove("button-on");
     try {
-      console.log(contract.functions);
       await contract.functions.votingOff();
+      voteButton.classList.add("button-off");
+      voteButton.classList.remove("button-on");
     } catch (error) {
+      voteButton.classList.remove("button-off");
+      voteButton.classList.add("button-on");
+      switchInput.checked = true;
+
       alert("Unable to change Voting status");
       console.log(error);
     }
@@ -143,12 +198,15 @@ issueTokenButton.addEventListener("click", async () => {
   }
 
   codenameInput.value = amountInput.value = "";
-
+  
   const contract = await _intializeContract(signer);
+  console.log("fshfgajshd", contract.events);
   try {
     await contract.issueToken(codename, amount);
   } catch (error) {
     console.log("Issue Token failed. Error message:", error.message);
+  } finally {
+    window.location.reload();
   }
 });
 
@@ -174,24 +232,10 @@ voteButton.addEventListener("click", async () => {
     await contract.vote(codename, amount);
   } catch (error) {
     console.log("Vote failed. Error message:", error.reason);
+  } finally {
+    window.location.reload();
   }
 });
-
-contractEvent.on("IssueToken", async (to, amount) => {
-  console.log("Transfer event emitted. {to, amount}");
-  rankingData.find((item) => item.codename === to).amount += amount;
-  updateRankingData();
-});
-
-/**
- * ISSUE TOKEN (FUNC)
- *
- * RANKING E EVENTOS XX
- *
- * VOTING XX
- *
- * REQUIREMENTS
- */
 
 /** POR PRIORIDADE
  * Alterar signer quando troca de conta no metamask

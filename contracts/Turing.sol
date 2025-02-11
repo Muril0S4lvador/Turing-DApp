@@ -148,7 +148,7 @@ contract Turing is ERC20{
     function vote(string calldata receiver, uint256 amount) public {
         require(msg.sender != deployer && msg.sender != teacherAddress, "Unauthorized");
         require(voting == true, "You can't vote now");
-        require(amount <= 2, "You must send a lower amount");
+        require(amount <= 2000000000000000000, "You must send a lower amount");
         
         Candidate storage c = authorizedUsers[receiver];
 
