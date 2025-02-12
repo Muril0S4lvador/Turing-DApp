@@ -25,7 +25,13 @@ contract Turing is ERC20{
      */
     mapping(string => Candidate) authorizedUsers;
 
-    event Vote(string from, string to, uint256 value);
+    /**
+     * @dev Mapeia os enderços para os nomes dos candidatos
+     */
+    mapping(address => string) codenamesByAddress;
+    
+
+    event Vote(string from, string to, uint256 amount);
     event IssueToken(string to, uint256 amount);
 
     constructor() ERC20("Turing", "TTK"){
@@ -79,6 +85,7 @@ contract Turing is ERC20{
             Candidate storage c = authorizedUsers[candidateCodename[i]];
             c.candidateAddress = candidateAddresses[i];
             codenames.push(candidateCodename[i]);
+            codenamesByAddress[candidateAddresses[i]] = candidateCodename[i];
         }
         
     }
@@ -137,6 +144,7 @@ contract Turing is ERC20{
 
     function issueToken(string calldata receiver, uint256 amount) public{
         require(msg.sender == deployer || msg.sender == teacherAddress, "Unauthenticated!");
+        require(amount > 0, "Amount must be greater than 0");
 
         Candidate storage c = authorizedUsers[receiver];
 
@@ -148,7 +156,8 @@ contract Turing is ERC20{
     function vote(string calldata receiver, uint256 amount) public {
         require(msg.sender != deployer && msg.sender != teacherAddress, "Unauthorized");
         require(voting == true, "You can't vote now");
-        require(amount <= 2000000000000000000, "You must send a lower amount");
+        require(amount <= 2000000000000000000, "You must send a lower than 2");
+        require(amount > 0, "Amount must be greater than 0");
         
         Candidate storage c = authorizedUsers[receiver];
 
@@ -165,8 +174,7 @@ contract Turing is ERC20{
 
         // Marca que receiver foi votado pelo sender
         c.votedBy[msg.sender] = true;
+
+        emit Vote(codenamesByAddress[msg.sender], receiver, amount);
     }
-
-
-
 }

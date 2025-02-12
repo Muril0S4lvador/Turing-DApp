@@ -7,7 +7,7 @@ const localBlockchainAddress = "http://127.0.0.1:8545/";
 const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 const provider = new ethers.providers.JsonRpcProvider(localBlockchainAddress);
-const contractEvent = _intializeContract(provider);
+let contractEvent;
 let signer = provider.getSigner();
 
 let rankingData = [];
@@ -34,8 +34,6 @@ async function reloadSigner() {
           signer = provider.getSigner(accounts[0]);
           console.log("Signer updated:", await signer.getAddress());
 
-          // Reload or update the page as needed
-          window.location.reload(); // Reload the page to reflect changes
       } else {
           console.error("No accounts found in MetaMask");
       }
@@ -53,15 +51,33 @@ async function connectToMetaMask() {
 
           // Update the signer with the new account
           signer = provider.getSigner(accounts[0]);
-          contractEvent = _intializeContract(provider, signer);
-          console.log("Signer updated:", await signer.getAddress());
 
-          // // Listen for account changes
-          // ethereum.on('accountsChanged', async (newAccounts) => {
-          //     console.log("Account changed to:", newAccounts[0]);
-          //     await reloadSigner();
+          // Initialize contract to listen to events
+          contractEvent = await _intializeContract(provider);
 
-          // });
+          // Configure event listeners
+          contractEvent.on('IssueToken', async (to, amount) => {
+            console.log(`IssueToken event emitted. {${to}, ${amount}}`);
+            
+            const toItem = rankingData.find((item) => item.codename === to);
+            toItem.balance += toNumberAmount(amount);
+
+            updateRankingData();
+          });
+
+          contractEvent.on('Vote', async (from, to, amount) => {
+            console.log(`Vote event emitted. {from: ${from}, to: ${to}, ${amount}}`);
+            const fromItem = rankingData.find(item => item.codename === from);
+            const toItem = rankingData.find(item => item.codename === to);
+            
+            // Atualiza balance dos objetos
+            amount = toNumberAmount(amount);
+            fromItem.balance -= amount;
+            toItem.balance += amount;
+
+            updateRankingData();
+          });
+          
       } catch (error) {
           console.error("User denied account access or an error occurred:", error);
       }
@@ -85,6 +101,7 @@ async function loadPage() {
       rankingData = parseRankingData(rankingString);
 
       console.log("Ranking Recebido:", rankingData);
+      formatBalanceRankingData();
       updateRankingData();
     } catch (error) {
       console.error("Erro ao carregar ranking:", error);
@@ -94,20 +111,36 @@ async function loadPage() {
   }
 }
 
+function formatBalanceRankingData(){
+  rankingData.forEach((item) => {
+    item.balance = toNumberAmount(item.balance);
+  })
+}
+
+/**
+ * Transforma amount em numero formatado
+ */
+function toNumberAmount(amount) {
+  return parseFloat(amount) / Math.pow(10, 18);
+}
+
+/**
+ * Transforma balance em string formatada
+ */
+function toStringBalance(balance) {
+  return balance.toFixed(18).replace(".", ",");
+}
+
 function updateRankingData() {
   const rankingList = document.getElementById("rankingList");
   rankingList.innerHTML = ""; // Limpa a lista antes de adicionar novos elementos
 
-  rankingData.sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance));
+  rankingData.sort((a, b) => b.balance - a.balance);
 
   rankingData.forEach((item) => {
     const div = document.createElement("div");
     div.classList.add("ranking-item");
-
-    const balance = parseFloat(item.balance) / Math.pow(10, 18);
-    const formattedBalance = balance.toFixed(18).replace(".", ",");
-    
-    div.innerHTML = `<span>${item.codename}</span> <span>${formattedBalance} T</span>`;
+    div.innerHTML = `<span>${item.codename}</span> <span>${toStringBalance(item.balance)} T</span>`;
     rankingList.appendChild(div);
   });
 }
@@ -187,10 +220,20 @@ const issueTokenButton = document.getElementById("button-issue-token");
 const codenameInput = document.getElementById("codename");
 const amountInput = document.getElementById("amount");
 
+function getAmount(){
+  const regex = /\D/;  // \D corresponde a qualquer caractere que não seja número (equivalente a [^0-9])
+
+  // Verifica se existe algum caractere não numérico na string
+  if (regex.test(amountInput.value)) {
+    return 0;
+  }
+  return new ethers.BigNumber.from(amountInput.value);
+}
+
 // Adiciona Listener para botão Issue Token
 issueTokenButton.addEventListener("click", async () => {
   const codename = codenameInput.value.trim(); // Remove espaços extras
-  const amount = parseFloat(amountInput.value); // Converte string para número
+  const amount = getAmount();
 
   if (!codename || isNaN(amount) || amount <= 0) {
     alert("Por favor, preencha um codename válido e um amount maior que zero.");
@@ -200,13 +243,10 @@ issueTokenButton.addEventListener("click", async () => {
   codenameInput.value = amountInput.value = "";
   
   const contract = await _intializeContract(signer);
-  console.log("fshfgajshd", contract.events);
   try {
     await contract.issueToken(codename, amount);
   } catch (error) {
     console.log("Issue Token failed. Error message:", error.message);
-  } finally {
-    window.location.reload();
   }
 });
 
@@ -218,7 +258,7 @@ voteButton.addEventListener("click", async () => {
   }
 
   const codename = codenameInput.value.trim(); // Remove espaços extras
-  const amount = parseFloat(amountInput.value); // Converte string para número
+  const amount = getAmount();
 
   if (!codename || isNaN(amount) || amount <= 0) {
     alert("Por favor, preencha um codename válido e um amount maior que zero.");
@@ -232,14 +272,5 @@ voteButton.addEventListener("click", async () => {
     await contract.vote(codename, amount);
   } catch (error) {
     console.log("Vote failed. Error message:", error.reason);
-  } finally {
-    window.location.reload();
   }
 });
-
-/** POR PRIORIDADE
- * Alterar signer quando troca de conta no metamask
- * Opção de voto
- * Formatar numero de amount -18 casas decimais
- * Atualizar pagina dinamicamente de acordo com eventos do contrato
- */
